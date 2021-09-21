@@ -45,4 +45,4 @@ RUN set -eux; \
 
 RUN gu install native-image
 
-ENTRYPOINT ["java"]
+CMD ["jshell"]
