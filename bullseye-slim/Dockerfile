@@ -2,7 +2,7 @@ FROM debian:bullseye-slim
 
 ARG GRAALVM_VERSION=21.2.0
 ARG JAVA_VERSION=11
-ARG GRAALVM_PKG=graalvm-ce-java${JAVA_VERSION}-GRAALVM_ARCH-${GRAALVM_VERSION}.tar.gz
+ARG GRAALVM_PKG=graalvm-ce-java${JAVA_VERSION}-linux-GRAALVM_ARCH-${GRAALVM_VERSION}.tar.gz
 ARG GRAALVM_URL_ROOT=https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${GRAALVM_VERSION}/
 ARG TARGETPLATFORM
 
@@ -23,17 +23,13 @@ ENV GRAALVM_AMD64_SHA256=bbd3e03025168172a76c2a29e6a14c1c37e3476b30774259c3ef595
 ENV GRAALVM_ARM64_SHA256=bbdf38d5e6871f7e3b2470ab9b9bb760667d4524ee2a20eadfaf13636a2d018c
 
 RUN set -eux; \
-    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-      GRAALVM_PKG=$(printf '%s\n' "$GRAALVM_PKG" | sed 's/GRAALVM_ARCH/linux-amd64/'); \
-    fi; \
-    if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-      GRAALVM_PKG=$(printf '%s\n' "$GRAALVM_PKG" | sed 's/GRAALVM_ARCH/linux-aarch64/'); \
-    fi; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    GRAALVM_PKG=$(printf '%s\n' "$GRAALVM_PKG" | sed "s/GRAALVM_ARCH/${dpkgArch}/"); \
     curl --fail --silent --location --retry 3 --remote-name ${GRAALVM_URL_ROOT}${GRAALVM_PKG}; \
-    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+    if [ "$dpkgArch" = "amd64" ]; then \
       echo "$GRAALVM_AMD64_SHA256 *${GRAALVM_PKG}" | sha256sum --strict --check; \
     fi; \
-    if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    if [ "$dpkgArch" = "arm64" ]; then \
       echo "$GRAALVM_ARM64_SHA256 *${GRAALVM_PKG}" | sha256sum --strict --check; \
     fi; \
     tar -xzC /opt/ -f ${GRAALVM_PKG}; \
